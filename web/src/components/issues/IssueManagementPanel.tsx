@@ -161,8 +161,9 @@ export function IssueManagementPanel({
       return
     }
     setImprovingResponse(true)
+    const aiUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8000'
     try {
-      const { data } = await axios.post('/api/ai/improve', {
+      const { data } = await axios.post(`${aiUrl}/api/improve`, {
         draft: response.trim(),
         issue_title: issueTitle ?? '',
         issue_description: issueDescription ?? '',
