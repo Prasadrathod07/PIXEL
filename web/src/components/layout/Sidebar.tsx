@@ -23,6 +23,8 @@ import type { User } from '@/lib/types'
 interface SidebarProps {
   user: User
   role: 'client' | 'manager'
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 type NavItem = { href: string; label: string; icon: React.ElementType; accent?: boolean; showIssueBadge?: boolean }
@@ -41,7 +43,7 @@ const managerNav: NavItem[] = [
   { href: '/manager/sites', label: 'All Sites', icon: Globe },
 ]
 
-export default function Sidebar({ user, role }: SidebarProps) {
+export default function Sidebar({ user, role, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -77,7 +79,22 @@ export default function Sidebar({ user, role }: SidebarProps) {
   }
 
   return (
-    <aside className="w-64 h-screen border-r border-border flex flex-col shrink-0 bg-card/80 backdrop-blur-sm">
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={onClose}
+        />
+      )}
+    <aside className={cn(
+      'w-64 h-screen border-r border-border flex flex-col shrink-0 bg-card/80 backdrop-blur-sm transition-transform duration-300 z-50',
+      // Desktop: always visible
+      'lg:relative lg:translate-x-0',
+      // Mobile: fixed drawer, slide in/out
+      'fixed top-0 left-0',
+      isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+    )}>
       {/* Logo */}
       <div className="h-14 px-4 flex items-center gap-3 border-b border-border shrink-0">
         <div
@@ -187,5 +204,6 @@ export default function Sidebar({ user, role }: SidebarProps) {
         </div>
       </div>
     </aside>
+    </>
   )
 }
