@@ -9,6 +9,7 @@ import {
   Check,
   Lock,
   ChevronDown,
+  Sparkles,
 } from 'lucide-react'
 import { StatusBadge, SeverityBadge } from '@/components/issues/IssueBadge'
 import { cn } from '@/lib/utils'
@@ -38,6 +39,9 @@ interface IssueManagementPanelProps {
   onUpdated?: (updates: { status?: IssueStatus; severity?: IssueSeverity }) => void
   onResponseSent?: (event: unknown) => void
   prefillResponse?: string
+  issueTitle?: string
+  issueDescription?: string
+  issueType?: string
 }
 
 function SavingIndicator({ saving }: { saving: boolean }) {
@@ -61,12 +65,16 @@ export function IssueManagementPanel({
   onUpdated,
   onResponseSent,
   prefillResponse,
+  issueTitle,
+  issueDescription,
+  issueType,
 }: IssueManagementPanelProps) {
   const [status, setStatus] = useState<IssueStatus>(initialStatus)
   const [severity, setSeverity] = useState<IssueSeverity>(initialSeverity)
   const [savingStatus, setSavingStatus] = useState(false)
   const [savingSeverity, setSavingSeverity] = useState(false)
   const [savingResponse, setSavingResponse] = useState(false)
+  const [improvingResponse, setImprovingResponse] = useState(false)
 
   const [response, setResponse] = useState('')
   const [previewMode, setPreviewMode] = useState(false)
@@ -146,6 +154,31 @@ export function IssueManagementPanel({
       setSavingResponse(false)
     }
   }, [issueId, response, onResponseSent, onUpdated])
+
+  const improveWithAI = useCallback(async () => {
+    if (!response.trim()) {
+      toast.error('Write a draft response first')
+      return
+    }
+    setImprovingResponse(true)
+    try {
+      const { data } = await axios.post('/api/ai/improve', {
+        draft: response.trim(),
+        issue_title: issueTitle ?? '',
+        issue_description: issueDescription ?? '',
+        issue_type: issueType,
+        issue_severity: severity,
+      })
+      setResponse(data.improved)
+      setPreviewMode(false)
+      textareaRef.current?.focus()
+      toast.success('Response improved by AI')
+    } catch {
+      toast.error('AI improvement unavailable')
+    } finally {
+      setImprovingResponse(false)
+    }
+  }, [response, issueTitle, issueDescription, issueType, severity])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -273,6 +306,26 @@ export function IssueManagementPanel({
             rows={4}
             className="w-full bg-muted/30 border border-border rounded-md px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary resize-none transition-colors"
           />
+        )}
+
+        {/* Improve with AI */}
+        {!previewMode && (
+          <button
+            onClick={improveWithAI}
+            disabled={improvingResponse || !response.trim()}
+            className={cn(
+              'w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-all duration-150',
+              'border-primary/30 text-primary/80 hover:text-primary hover:bg-primary/10 hover:border-primary/50',
+              'disabled:opacity-40 disabled:cursor-not-allowed'
+            )}
+          >
+            {improvingResponse ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Sparkles className="w-3 h-3" />
+            )}
+            {improvingResponse ? 'Improving…' : 'Improve with AI'}
+          </button>
         )}
 
         <div className="flex items-center justify-between">

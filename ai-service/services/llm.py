@@ -105,6 +105,45 @@ class LLMService:
                 "confidence_score": 0.5,
             }
 
+    async def improve_response(
+        self,
+        draft: str,
+        issue_title: str,
+        issue_description: str,
+        issue_type: Optional[str] = None,
+        issue_severity: Optional[str] = None,
+    ) -> str:
+        """Rewrite a manager's draft response to be more professional and clear."""
+        system_prompt = (
+            "You are a professional technical support communication specialist for a web agency. "
+            "Your job is to improve support responses so they are:\n"
+            "- Empathetic and professional in tone\n"
+            "- Clear and easy for a non-technical client to understand\n"
+            "- Concise — no filler words or unnecessary padding\n"
+            "- Actionable — the client knows exactly what happens next\n\n"
+            "Return ONLY the improved response text. No preamble, no explanation, no quotes. "
+            "Just the improved message the manager will send."
+        )
+        context_parts = [f"Issue title: {issue_title}", f"Client description: {issue_description}"]
+        if issue_type:
+            context_parts.append(f"Issue type: {issue_type}")
+        if issue_severity:
+            context_parts.append(f"Severity: {issue_severity}")
+
+        user_message = (
+            "\n".join(context_parts)
+            + f"\n\nManager's draft response:\n{draft}\n\n"
+            "Improve this response."
+        )
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ]
+        try:
+            return self._call_llm(messages, max_tokens=600).strip()
+        except Exception:
+            return draft
+
     async def chat(self, messages: list, issue_context: Optional[dict] = None) -> str:
         """Conversational endpoint with optional issue context injected into system prompt."""
         system_content = CHAT_SYSTEM_PROMPT

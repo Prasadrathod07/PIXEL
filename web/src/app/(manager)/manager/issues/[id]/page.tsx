@@ -217,6 +217,9 @@ function IssueDetailInner({ id }: { id: string }) {
             onUpdated={handleUpdated}
             onResponseSent={handleResponseSent}
             prefillResponse={responseText || undefined}
+            issueTitle={issue.title}
+            issueDescription={issue.description}
+            issueType={issue.type}
           />
         </div>
 

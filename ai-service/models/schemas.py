@@ -66,3 +66,15 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     message: str
     role: str = "assistant"
+
+
+class ImproveRequest(BaseModel):
+    draft: str
+    issue_title: str
+    issue_description: str
+    issue_type: Optional[str] = None
+    issue_severity: Optional[str] = None
+
+
+class ImproveResponse(BaseModel):
+    improved: str

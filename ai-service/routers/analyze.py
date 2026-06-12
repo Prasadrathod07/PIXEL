@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from models.schemas import AnalyzeRequest, AIAnalysis
+from models.schemas import AnalyzeRequest, AIAnalysis, ImproveRequest, ImproveResponse
 from services.rag import rag_pipeline
+from services.llm import llm_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,25 @@ async def analyze_issue(request: AnalyzeRequest):
     except Exception as e:
         logger.error(f"Analysis error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.post("/improve", response_model=ImproveResponse)
+async def improve_response(request: ImproveRequest):
+    """Rewrite a manager's draft response to be more professional."""
+    if not request.draft.strip():
+        raise HTTPException(status_code=400, detail="Draft cannot be empty")
+    try:
+        improved = await llm_service.improve_response(
+            draft=request.draft,
+            issue_title=request.issue_title,
+            issue_description=request.issue_description,
+            issue_type=request.issue_type,
+            issue_severity=request.issue_severity,
+        )
+        return ImproveResponse(improved=improved)
+    except Exception as e:
+        logger.error(f"Improve error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to improve response")
 
 
 @router.get("/health")
