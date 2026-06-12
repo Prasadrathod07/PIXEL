@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
 import { NotificationBell } from './NotificationBell'
 import { DarkModeToggle } from './DarkModeToggle'
-import { ThemeColorPicker } from './ThemeColorPicker'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { getInitials } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -57,7 +56,6 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2 flex-1 justify-end">
-        <ThemeColorPicker />
         <DarkModeToggle />
 
         <NotificationBell userId={user.id} role={user.role} />
